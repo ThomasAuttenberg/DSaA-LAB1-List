@@ -128,7 +128,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="IndexedList.cpp" />
     <ClCompile Include="List.cpp" />
   </ItemGroup>
   <ItemGroup>
