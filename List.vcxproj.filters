@@ -18,10 +18,19 @@
     <ClCompile Include="List.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IndexedList.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\clist.h">
+      <Filter>Исходные файлы</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

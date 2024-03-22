@@ -128,9 +128,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.cpp" />
     <ClCompile Include="List.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\clist.h" />
+    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.h" />
     <ClInclude Include="IndexedList.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

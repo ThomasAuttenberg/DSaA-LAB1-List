@@ -250,13 +250,13 @@ template<class T>
 inline T& List<T>::back()
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *end();
+	return *(--end());
 }
 template<class T>
 inline T List<T>::back() const
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *cend();
+	return *(--cend());
 }
 template<class T>
 inline T& List<T>::at(size_t index)
@@ -264,7 +264,7 @@ inline T& List<T>::at(size_t index)
 	if (index > realSize-1 || index < 0) {
 		std::ostringstream message;
 		message << "List operation at: out of range\n[list size : " << realSize << " | index got : " << index << "]";
-		throw new std::out_of_range(message.str());
+		throw std::out_of_range(message.str());
 	}
 
 	iterator it = begin();
@@ -366,6 +366,7 @@ inline void List<T>::insert(const_iterator where, const T& val) {
 template<class T>
 inline void List<T>::insertAt(size_t index, const T& val)
 {
+	if (index > realSize) throw std::invalid_argument("Out of bound exception on insertAt call");
 	iterator it = begin();
 	for (int i = 0; i < index; i++) {
 		it++;
@@ -428,10 +429,10 @@ inline void List<T>::removeValue(const T& value)
 template<class T>
 inline void List<T>::removeAt(size_t index)
 {
-	if (index >= realSize) throw new std::out_of_range("Out of range exception on calling removeAt");
+	if (index >= realSize) throw std::out_of_range("Out of range exception on calling removeAt");
 	const_iterator it = begin();
-	for (int i = 0; i <= index; i++, it++);
-	erase(it);
+	for (int i = 0; i < index; i++, it++);
+		erase(it);
 }
 template<class T>
 inline size_t List<T>::pushInContainer(Node& val) {

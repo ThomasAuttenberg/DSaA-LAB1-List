@@ -5,73 +5,244 @@
 #include "IndexedList.h"
 #include <vector>
 #include <list>
+#include "Menu.h"
+#include <conio.h>
 int main()
 {
-    List<int> a;
-    a.push_back(0);
-    a.size();
-    a.push_back(1);
-    a.push_back(2);
-    a.push_back(3);
-    a.push_front(4);
-    
-    List<int>::iterator b = a.begin();
-    b++;
-    List<int>::iterator c = b;
-    c++;
-    c++;
-    a.clear();
-    //std::cout << *b << std::endl;
-    //a.erase(a.begin(), a.end());
-    try {
-        a.push_back(0);
-        a.push_front(1);
-        a.push_back(2);
-        a.push_back(3);
-        a.push_back(4);
-        a.push_back(4);
-        a.push_back(4);
-        auto it = a.begin();
-        it++;
-        it++;
-        it++;
-        it++;
-        it++;
-        a.insert(it, 15);
-        a.insertAt(3, 25);
-        a.front() = -1;
-        a.removeValue(4);
-        //a.pop_front();
-        std::cout << "index of 25:" << a.getIndexOf(25)<<"\n";
-        std::cout << a.at(3) <<" " << a.size() << "\n";
-    }
-    catch (std::logic_error e) {
-        std::cout << e.what() << "\n";
-    }
-    //std::list<int> s;
-   // s.push_back(0);
-   // s.push_back(1);
-   // s.push_back(2);
-    //s.push_back(3);
-   // s.push_front(4);
-   //std::list<int>::iterator iter = s.begin();
-    //iter++;
-    //std::list<int>::iterator iter_ = iter;
-    //++iter_;
-    //s.erase(iter, ++++iter);
-    //for (std::list<int>::iterator i = s.begin(); i != s.end(); i++) {
-   //     std::cout << *i << "\n";
-    //}
-
-    try {
-        
-        for (List<int>::iterator it = a.begin(); it != a.end(); it++) {
-            std::cout << " " << *it;
-        }
-    }
-    catch (std::logic_error e) {
-        std::cout << e.what();
-    }
+	
+	system("chcp 1251");
+	using type = int;
+	type inputBuffer;
+	List<int> list;
+	//list.push_back(2);
+	//list.push_back(4);
+	auto iterator = list.begin();
+	enum OPERATION_TYPE {
+		Front,
+		Back
+	};
+	OPERATION_TYPE operationType;
+	Menu navigationMenu([&]() {
+		//std::cout << "Menu";
+		std::cout << "List: ";
+		for (auto it = list.begin(); it != list.end(); it++) {
+			if (it == iterator) std::cout << "[" << *it << "]" << " ";
+			else
+			std::cout << * it << " ";
+		}
+	});
+	Menu inputMenu([&] {
+		std::cout << "Введите значение элемента: ";
+	std::cin >> inputBuffer;;
+	if(operationType == OPERATION_TYPE::Front)
+		list.push_front(inputBuffer);
+	if (operationType == OPERATION_TYPE::Back)
+		list.push_back(inputBuffer);
+	if (list.size() == 1) iterator = list.begin();
+	Menu::console.setMenu(&navigationMenu);
+	}, true);
+	MenuItem iterplus("iter++", [&] {
+		try {
+			iterator++;
+		}
+		catch(std::exception e){
+			std::cout << "\n" << e.what();
+			_getch();
+		}
+	});
+	MenuItem iterminus("iter--", [&] {
+		try {
+		iterator--;
+	}
+	catch (std::exception e) {
+		std::cout << "\n" << e.what();
+		_getch();
+	}
+		});
+	MenuItem push_back("push_back", [&]() {
+		operationType = OPERATION_TYPE::Back;
+		Menu::console.setMenu(&inputMenu);
+	});
+	MenuItem push_front("push_front", [&]() {
+		operationType = OPERATION_TYPE::Front;
+		Menu::console.setMenu(&inputMenu);
+	});
+	MenuItem back("back", [&]() {
+		try {
+		std::cout<<"\n"<<list.back();
+	}
+	catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+	}
+	_getch();
+	Menu::console.setMenu(&navigationMenu);
+		});
+	MenuItem front("front", [&]() {
+			try {
+			std::cout<<"\n"<<list.front();
+		}
+		catch (std::exception e) {
+			std::cout << " [!] Exception: " << e.what();
+		}
+	_getch();
+		Menu::console.setMenu(&navigationMenu);
+	});
+	MenuItem clear("clear", [&]() {
+		list.clear();
+		iterator = list.begin();
+		Menu::console.setMenu(&navigationMenu);
+	});
+	MenuItem pop_front("pop_front", [&]() {
+		try {
+		list.pop_front();
+		}
+		catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+		_getch();
+		}
+	});
+	MenuItem pop_back("pop_back", [&]() {
+		try {
+		list.pop_back();
+	}
+	catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+		_getch();
+	}
+		});
+	MenuItem contains("contains", [&]() {
+		type a;
+		std::cout << "Введите элемент: ";
+		std::cin >> a;
+		std::cout << (list.contains(a) ? "Contains" : "Doesn't contain");
+		_getch();
+	});
+	MenuItem getIndexOf("getIndexOf", [&]() {
+		type a;
+	std::cout << "Введите элемент: ";
+	std::cin >> a;
+	std::cout <<"\n Индекс: " << list.getIndexOf(a);
+	_getch();
+	});
+	MenuItem insert("insert", [&]() {
+		type a;
+		std::cout << "Введите элемент: ";
+		std::cin >> a;
+		list.insert(iterator, a);
+		if (list.size() == 1) iterator = list.begin();
+	});
+	MenuItem insertAt("insertAt", [&]() {
+		type a;
+		type index;
+		std::cout << "Введите элемент: ";
+		std::cin >> a;
+		std::cout << "\nВведите индекс: ";
+		std::cin >> index;
+		try {
+			list.insertAt(index, a);
+			if (list.size() == 1) iterator = list.begin();
+		}
+		catch (std::exception e) {
+			std::cout << " [!] Exception: " << e.what();
+			_getch();
+		}
+	});
+	MenuItem erase("erase", [&]() {
+		try {
+			list.erase(iterator);
+		}
+		catch (std::exception e) {
+			std::cout << " [!] Exception: " << e.what();
+			_getch();
+		}
+	});
+	MenuItem removeValue("removeValue", [&]() {
+		type a;
+		std::cout << "Введите элемент: ";
+		std::cin >> a;
+		list.removeValue(a);
+	});
+	MenuItem removeAt("removeAt", [&]() {
+	type index;
+	std::cout << "Введите индекс: ";
+	std::cin >> index;
+	try {
+		list.removeAt(index);
+	}
+	catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+		_getch();
+	}
+	});
+	MenuItem edit("edit", [&]() {
+	try {
+		type* a = &(*iterator);
+		type val;
+		std::cout << "Введите новое значение: ";
+		std::cin >> val;
+		*a = val;
+	}
+	catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+		_getch();
+	}
+	});
+	MenuItem editAt("editAt", [&]() {
+		try {
+		type index;
+		std::cout << "Введите индекс: ";
+		std::cin >> index;
+		type* a = &(list.at(index));
+		type val;
+		std::cout << "Введите новое значение: ";
+		std::cin >> val;
+		*a = val;
+	}
+	catch (std::exception e) {
+		std::cout << " [!] Exception: " << e.what();
+		_getch();
+	}
+		});
+	MenuItem begin("begin", [&]() {
+		iterator = list.begin();
+		});
+	MenuItem end("end", [&]() {
+		iterator = list.end();
+		});
+	MenuItem star(" * ", [&](){
+		try {
+			type a = *iterator;
+			std::cout<<"Element iterator's pointing at:"<<a;
+			_getch();
+		}
+		catch (std::exception e) {
+			std::cout << " [!] Exception: " << e.what();
+			_getch();
+		}
+	});
+	
+	navigationMenu.addItem(iterplus);
+	navigationMenu.addItem(iterminus);
+	navigationMenu.addItem(push_back);
+	navigationMenu.addItem(push_front);
+	navigationMenu.addItem(front);
+	navigationMenu.addItem(back);
+	navigationMenu.addItem(clear);
+	navigationMenu.addItem(pop_front);
+	navigationMenu.addItem(pop_back);
+	navigationMenu.addItem(contains);
+	navigationMenu.addItem(getIndexOf);
+	navigationMenu.addItem(insert);
+	navigationMenu.addItem(insertAt);
+	navigationMenu.addItem(removeValue);
+	navigationMenu.addItem(removeAt);
+	navigationMenu.addItem(edit);
+	navigationMenu.addItem(editAt);
+	navigationMenu.addItem(begin);
+	navigationMenu.addItem(end);
+	navigationMenu.addItem(star);
+	Menu::console.setMenu(&navigationMenu);
+	Menu::console.show();
 }
 
 // Запуск программы: CTRL+F5 или меню "Отладка" > "Запуск без отладки"
