@@ -128,13 +128,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.cpp" />
     <ClCompile Include="List.cpp" />
+    <ClCompile Include="Menu.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\clist.h" />
-    <ClInclude Include="C:\Users\maxim\source\repos\ThomasAuttenberg\Programming-semester-3-coursework\Menu.h" />
+    <ClInclude Include="clist.h" />
     <ClInclude Include="IndexedList.h" />
+    <ClInclude Include="Menu.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

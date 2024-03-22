@@ -150,6 +150,7 @@ int main()
 	MenuItem erase("erase", [&]() {
 		try {
 			list.erase(iterator);
+			iterator = list.begin();
 		}
 		catch (std::exception e) {
 			std::cout << " [!] Exception: " << e.what();
@@ -160,14 +161,18 @@ int main()
 		type a;
 		std::cout << "Введите элемент: ";
 		std::cin >> a;
+		if (*iterator == a) iterator = list.begin();
 		list.removeValue(a);
+		
 	});
 	MenuItem removeAt("removeAt", [&]() {
 	type index;
 	std::cout << "Введите индекс: ";
 	std::cin >> index;
+
 	try {
 		list.removeAt(index);
+		iterator = list.begin();
 	}
 	catch (std::exception e) {
 		std::cout << " [!] Exception: " << e.what();
@@ -234,6 +239,7 @@ int main()
 	navigationMenu.addItem(getIndexOf);
 	navigationMenu.addItem(insert);
 	navigationMenu.addItem(insertAt);
+	navigationMenu.addItem(erase);
 	navigationMenu.addItem(removeValue);
 	navigationMenu.addItem(removeAt);
 	navigationMenu.addItem(edit);

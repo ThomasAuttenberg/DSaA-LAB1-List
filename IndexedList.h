@@ -8,11 +8,11 @@
 template <class T>
 class List
 {
-static size_t INIT_LIST_SIZE;
+	static size_t INIT_LIST_SIZE;
 private:
 	size_t head_index = 0; // storage index where the first element is located
 	size_t tail_index = 0; // ...
-	
+
 	struct Node {
 		T value;
 		size_t previousNodeIndex;
@@ -21,20 +21,22 @@ private:
 
 	/*
 	*  Structure graphic description:
-	*________________________________________________________ 
+	*________________________________________________________
 	* array |
 	* index |      [    1   ]  ...  [   115  ]  ...
-	*_______|_______________________________________________ 
-	* val:	|      [   5    ]       [  1.25  ] 
-	* prev  |      [   115  ]  ...  [   -1   ]  ...    
+	*_______|_______________________________________________
+	* val:	|      [   5    ]       [  1.25  ]
+	* prev  |      [   115  ]  ...  [   -1   ]  ...
 	* next  |      [    2   ]       [   1    ]
-	*_______|________________________________________________                     
+	*_______|________________________________________________
 	*       |          |               |
 	* link: |          -----------------
-	*/                             
+	*/
 
 	Node* storage; // linear (+=storageCapacity) growing Node* array.
-	std::stack<size_t> storageIndexes;
+	//std::stack<size_t> storageIndexes;
+	size_t firstFreeNodeIndex = 1;
+	size_t lastFreeNodeIndex = INIT_LIST_SIZE - 1;
 	size_t storageCapacity = INIT_LIST_SIZE;
 	size_t realSize = 0;
 
@@ -43,7 +45,7 @@ private:
 public:
 
 
-// ============ Iterators ==================
+	// ============ Iterators ==================
 	class iterator;
 	class const_iterator {
 	private:
@@ -67,7 +69,7 @@ public:
 	private:
 		friend class List<T>;
 		size_t targetIndex;
-		iterator(const List<T>*list, size_t targetIndex);
+		iterator(const List<T>* list, size_t targetIndex);
 		const List<T>* associatedContainer = nullptr;
 	public:
 		iterator();
@@ -80,17 +82,17 @@ public:
 	};
 	//using Iterator = IndexedList<T>::iterator;
 // ============ Methods ==================
-	
+
   // ===== the rule of five =========
 	List();
 	List(List<T>& other);
 	List(List<T>&& other);
 	List& operator=(List<T>& other);
 	List& operator=(List<T>&& other);
-  // ================================
+	// ================================
 
-  // ========= Operations ===========	
-	// Informational:
+	// ========= Operations ===========	
+	  // Informational:
 	size_t size() const;
 	bool isEmpty() const;
 	bool contains(const T& value) const;
@@ -119,16 +121,16 @@ public:
 	void removeValue(const T& value);
 	void removeAt(size_t index);
 
-  // ================================
+	// ================================
 
-  // ======== Destructor ============
+	// ======== Destructor ============
 	~List();
-  // ================================
+	// ================================
 
 };
 
 template <class T>
-size_t List<T>::INIT_LIST_SIZE = 50;
+size_t List<T>::INIT_LIST_SIZE = 2;
 
 template <class T>
 List<T>::List() {
@@ -137,9 +139,11 @@ List<T>::List() {
 	endNode.nextNodeIndex = -1;
 	endNode.previousNodeIndex = -1;
 	storage[0] = endNode;
-	for (int i = 1; i < storageCapacity; i++) {
-		storageIndexes.push(i);
+	for (int i = 1; i < storageCapacity - 1; i++) {
+		storage[i].nextNodeIndex = i + 1;
 	}
+	lastFreeNodeIndex = storageCapacity - 1;
+	storage[lastFreeNodeIndex].nextNodeIndex = -1;
 }
 
 template<class T>
@@ -147,9 +151,11 @@ inline List<T>::List(List<T>& other)
 {
 	this->storage = new Node[other.storageCapacity];
 	this->storageCapacity = other.storageCapacity;
-	this->storageIndexes = other.storageIndexes;
+	//this->storageIndexes = other.storageIndexes;
 	this->head_index = other.head_index;
 	this->tail_index = other.tail_index;
+	this->firstFreeNodeIndex = other.firstFreeNodeIndex;
+	this->lastFreeNodeIndex = other.lastFreeNodeIndex;
 	memcpy(storage, other.storage, sizeof(Node) * storageCapacity);
 	this->realSize = other.realSize;
 }
@@ -157,9 +163,11 @@ template<class T>
 inline List<T>::List(List<T>&& other) {
 	this->storage = other.storage;
 	this->storageCapacity = other.storageCapacity;
-	this->storageIndexes = std::move(other.storageIndexes);
+	//this->storageIndexes = std::move(other.storageIndexes);
 	this->head_index = other.head_index;
 	this->tail_index = other.tail_index;
+	this->firstFreeNodeIndex = other.firstFreeNodeIndex;
+	this->lastFreeNodeIndex = other.lastFreeNodeIndex;
 	other.storage = nullptr;
 	other.storageCapacity = 0;
 	this->realSize = other.realSize;
@@ -177,10 +185,12 @@ inline List<T>& List<T>::operator=(List<T>& other)
 		delete[] storage;
 		this->storage = new Node[other.storageCapacity];
 		this->storageCapacity = other.storageCapacity;
-		this->storageIndexes = other.storageIndexes;
+		//this->storageIndexes = other.storageIndexes;
 		memcpy(storage, other.storage, sizeof(Node) * storageCapacity);
 		this->head_index = other.head_index;
 		this->tail_index = other.tail_index;
+		this->firstFreeNodeIndex = other.firstFreeNodeIndex;
+		this->lastFreeNodeIndex = other.lastFreeNodeIndex;
 		this->realSize = other.realSize;
 	}
 	return *this;
@@ -193,11 +203,13 @@ inline List<T>& List<T>::operator=(List<T>&& other)
 		delete[] storage;
 		this->storage = other.storage;
 		this->storageCapacity = other.storageCapacity;
-		this->storageIndexes = std::move(other.storageIndexes);
+		//this->storageIndexes = std::move(other.storageIndexes);
 		other.storage = nullptr;
 		other.storageCapacity = 0;
 		this->head_index = other.head_index;
 		this->tail_index = other.tail_index;
+		this->firstFreeNodeIndex = other.firstFreeNodeIndex;
+		this->lastFreeNodeIndex = other.lastFreeNodeIndex;
 		this->realSize = other.realSize;
 	}
 	return *this;
@@ -250,21 +262,21 @@ template<class T>
 inline T& List<T>::back()
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *(--end());
+	return *end();
 }
 template<class T>
 inline T List<T>::back() const
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *(--cend());
+	return *cend();
 }
 template<class T>
 inline T& List<T>::at(size_t index)
 {
-	if (index > realSize-1 || index < 0) {
+	if (index > realSize - 1 || index < 0) {
 		std::ostringstream message;
 		message << "List operation at: out of range\n[list size : " << realSize << " | index got : " << index << "]";
-		throw std::out_of_range(message.str());
+		throw new std::out_of_range(message.str());
 	}
 
 	iterator it = begin();
@@ -283,25 +295,25 @@ inline T List<T>::at(size_t index) const
 template<class T>
 inline List<T>::iterator List<T>::begin()
 {
-	return iterator(this,head_index);
+	return iterator(this, head_index);
 }
 
 template<class T>
 inline List<T>::iterator List<T>::end()
 {
-	return iterator(this,tail_index);
+	return iterator(this, tail_index);
 }
 
 template<class T>
 inline List<T>::const_iterator List<T>::cbegin() const
 {
-	return const_iterator(this,head_index);
+	return const_iterator(this, head_index);
 }
 
 template<class T>
 inline List<T>::const_iterator List<T>::cend() const
 {
-	return const_iterator(this,tail_index);
+	return const_iterator(this, tail_index);
 }
 
 template<class T>
@@ -311,11 +323,13 @@ inline void List<T>::clear()
 	this->realSize = 0;
 	this->head_index = 0;
 	this->tail_index = 0;
-	this->storageIndexes = std::move(std::stack<size_t>());
-	for (int i = 1; i < storageCapacity; i++) {
-		storageIndexes.push(i);
+	//this->storageIndexes = std::move(std::stack<size_t>());
+	for (int i = 1; i < storageCapacity-1; i++) {
+		storage[i].nextNodeIndex = i + 1;
 	}
-	
+	firstFreeNodeIndex = 1;
+	lastFreeNodeIndex = storageCapacity - 1;
+
 }
 template<class T>
 inline void List<T>::push_back(const T& val) {
@@ -343,16 +357,17 @@ inline void List<T>::insert(const_iterator where, const T& val) {
 	const_iterator nextNodeIter = where;
 	const_iterator prevNodeIter;
 	if (where != begin()) prevNodeIter = (--tempIter);
-	Node* prevNode = where == begin() ? nullptr : storage + ((prevNodeIter).targetIndex);
-	Node* nextNode = storage + ((nextNodeIter).targetIndex);
-	
+
 	Node newNode;
-	
+
 	newNode.value = val;
 	newNode.nextNodeIndex = nextNodeIter.targetIndex;
 	//newNode.previousNodeIndex = prevNode == nullptr ? -1 : prevNodeIter.targetIndex;
 	size_t newNodeIndex = pushInContainer(newNode);
-	
+
+	Node* prevNode = where == begin() ? nullptr : storage + ((prevNodeIter).targetIndex);
+	Node* nextNode = storage + ((nextNodeIter).targetIndex);
+
 	if (prevNode == nullptr) {
 		storage[newNodeIndex].previousNodeIndex = -1;
 		head_index = newNodeIndex;
@@ -366,7 +381,6 @@ inline void List<T>::insert(const_iterator where, const T& val) {
 template<class T>
 inline void List<T>::insertAt(size_t index, const T& val)
 {
-	if (index > realSize) throw std::invalid_argument("Out of bound exception on insertAt call");
 	iterator it = begin();
 	for (int i = 0; i < index; i++) {
 		it++;
@@ -391,10 +405,11 @@ inline void List<T>::erase(const_iterator from, const_iterator to)
 	const_iterator fromPrevious;
 	if (!isFromBegin) { fromPrevious = --from; from++; };
 	do {
-		
+
 		try {
 			const_iterator tempIter = from++;
-			storageIndexes.push(tempIter.targetIndex);
+			storage[lastFreeNodeIndex].nextNodeIndex = tempIter.targetIndex;
+			lastFreeNodeIndex = tempIter.targetIndex;
 			Node* node = storage + tempIter.targetIndex;
 			node->nextNodeIndex = -1;
 			node->previousNodeIndex = -1;
@@ -418,7 +433,7 @@ template<class T>
 inline void List<T>::removeValue(const T& value)
 {
 	const_iterator it = begin();
-	
+
 	while (it != end()) {
 		const_iterator tempIter = it++;
 		if (*tempIter == value)
@@ -429,26 +444,30 @@ inline void List<T>::removeValue(const T& value)
 template<class T>
 inline void List<T>::removeAt(size_t index)
 {
-	if (index >= realSize) throw std::out_of_range("Out of range exception on calling removeAt");
+	if (index >= realSize) throw new std::out_of_range("Out of range exception on calling removeAt");
 	const_iterator it = begin();
 	for (int i = 0; i < index; i++, it++);
-		erase(it);
+	erase(it);
 }
 template<class T>
 inline size_t List<T>::pushInContainer(Node& val) {
-	
-	if (realSize == storageCapacity-2) { // 1 element is reserved to endNode
+
+	if (realSize == storageCapacity - 1) { // 1 element is reserved to endNode
 		Node* storage_ = new Node[storageCapacity + INIT_LIST_SIZE];
 		memcpy(storage_, storage, sizeof(Node) * storageCapacity);
-		for (int i = storageCapacity; i < storageCapacity + INIT_LIST_SIZE; i++) {
-			storageIndexes.push(i);
+		for (int i = storageCapacity; i < storageCapacity - 1 + INIT_LIST_SIZE; i++) {
+			//storageIndexes.push(i);
+			storage_[i].nextNodeIndex = i + 1;
 		}
+		lastFreeNodeIndex = storageCapacity + INIT_LIST_SIZE - 1;
+		firstFreeNodeIndex = storageCapacity;
 		storageCapacity += INIT_LIST_SIZE;
 		delete[] storage;
 		storage = storage_;
 	}
-	size_t newElemIndex = storageIndexes.top();
-	storageIndexes.pop();
+	size_t newElemIndex = firstFreeNodeIndex;
+	if(firstFreeNodeIndex != lastFreeNodeIndex)
+		firstFreeNodeIndex = storage[firstFreeNodeIndex].nextNodeIndex;
 	
 	storage[newElemIndex] = val;
 	realSize++;
@@ -490,7 +509,7 @@ inline T List<T>::const_iterator::operator*() const {
 	return associatedContainer->storage[targetIndex].value;
 }
 template<class T>
-inline List<T>::const_iterator& List<T>::const_iterator::operator++(){
+inline List<T>::const_iterator& List<T>::const_iterator::operator++() {
 	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator++: Iterator isn't linked to any container");
 	targetIndex = associatedContainer->storage[targetIndex].nextNodeIndex;
@@ -505,7 +524,7 @@ inline List<T>::const_iterator List<T>::const_iterator::operator++(int) {
 	return tempIterator;
 }
 template<class T>
-inline List<T>::const_iterator& List<T>::const_iterator::operator--(){
+inline List<T>::const_iterator& List<T>::const_iterator::operator--() {
 	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
 	targetIndex = associatedContainer->storage[targetIndex].previousNodeIndex;
@@ -521,7 +540,7 @@ inline List<T>::const_iterator List<T>::const_iterator::operator--(int) {
 }
 template<class T>
 inline bool List<T>::const_iterator::operator==(const List<T>::const_iterator& other) const {
-	if (other.associatedContainer == this->associatedContainer && this->targetIndex == other.targetIndex) 
+	if (other.associatedContainer == this->associatedContainer && this->targetIndex == other.targetIndex)
 		return true;
 	return false;
 }
@@ -529,7 +548,7 @@ inline bool List<T>::const_iterator::operator==(const List<T>::const_iterator& o
 // non const iterator
 
 template<class T>
-inline List<T>::iterator::iterator(){}
+inline List<T>::iterator::iterator() {}
 
 template<class T>
 inline List<T>::iterator::iterator(const List<T>* list, size_t targetIndex) {
@@ -565,8 +584,9 @@ inline List<T>::iterator& List<T>::iterator::operator--() {
 	return *this;
 }
 template<class T>
-inline List<T>::iterator List<T>::iterator::operator--(int) {\
-	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
+inline List<T>::iterator List<T>::iterator::operator--(int) {
+	\
+		if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
 	iterator tempIterator = *this;
 	--(*this);
