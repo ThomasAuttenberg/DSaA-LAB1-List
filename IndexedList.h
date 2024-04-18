@@ -1,8 +1,5 @@
 #pragma once
-#include <compare>
 #include <stdexcept>
-#include <sstream>
-#include <stack>
 
 
 template <class T>
@@ -90,6 +87,7 @@ public:
 	Node getNode(iterator it);
   // ===== the rule of five =========
 	List();
+	List(size_t maxCapacity);
 	List(List<T>& other);
 	List(List<T>&& other);
 	List& operator=(List<T>& other);
@@ -135,7 +133,7 @@ public:
 };
 
 template <class T>
-size_t List<T>::INIT_LIST_SIZE = 2;
+size_t List<T>::INIT_LIST_SIZE = 200;
 
 
 template<class T>
@@ -144,9 +142,14 @@ inline List<T>::Node List<T>::getNode(List<T>::iterator it)
 	return storage[it.targetIndex];
 }
 
-
 template <class T>
 List<T>::List() {
+	List(INIT_LIST_SIZE);
+}
+
+template <class T>
+List<T>::List(size_t maxCapacity) {
+	storageCapacity = maxCapacity;
 	storage = new Node[storageCapacity];
 	Node endNode;
 	endNode.nextNodeIndex = -1;
@@ -273,21 +276,21 @@ template<class T>
 inline T& List<T>::back()
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *end();
+	return *--end();
 }
 template<class T>
 inline T List<T>::back() const
 {
 	if (size() == 0) throw std::exception("back call on empty list");
-	return *cend();
+	return *--cend();
 }
 template<class T>
 inline T& List<T>::at(size_t index)
 {
-	if (index > realSize - 1 || index < 0) {
-		std::ostringstream message;
-		message << "List operation at: out of range\n[list size : " << realSize << " | index got : " << index << "]";
-		throw new std::out_of_range(message.str());
+	if (index >= realSize || index < 0) {
+		//std::ostringstream message;
+		//message << "List operation at: out of range";
+		throw std::out_of_range("List operation at: out of range");
 	}
 
 	iterator it = begin();
@@ -389,6 +392,7 @@ inline void List<T>::insert(const_iterator where, const T& val) {
 template<class T>
 inline void List<T>::insertAt(size_t index, const T& val)
 {
+	if (index < 0 || index > realSize) throw std::out_of_range("insert at: gotten index is out of list range");
 	iterator it = begin();
 	for (int i = 0; i < index; i++) {
 		it++;
@@ -441,6 +445,8 @@ inline void List<T>::erase(const_iterator from, const_iterator to)
 template<class T>
 inline void List<T>::removeValue(const T& value)
 {
+
+	//if (realSize == 0) return;
 	const_iterator it = begin();
 
 	while (it != end()) {
@@ -453,7 +459,7 @@ inline void List<T>::removeValue(const T& value)
 template<class T>
 inline void List<T>::removeAt(size_t index)
 {
-	if (index >= realSize) throw new std::out_of_range("Out of range exception on calling removeAt");
+	if (index >= realSize || index < 0) throw std::out_of_range("Out of range exception on calling removeAt");
 	const_iterator it = begin();
 	for (int i = 0; i < index; i++, it++);
 	erase(it);
@@ -461,7 +467,7 @@ inline void List<T>::removeAt(size_t index)
 template<class T>
 inline size_t List<T>::pushInContainer(Node& val) {
 
-	if (realSize == storageCapacity - 1) { // 1 element is reserved to endNode
+	/*if (realSize == storageCapacity - 1) { // 1 element is reserved to endNode
 		Node* storage_ = new Node[storageCapacity + INIT_LIST_SIZE];
 		memcpy(storage_, storage, sizeof(Node) * storageCapacity);
 		delete[] storage;
@@ -471,6 +477,8 @@ inline size_t List<T>::pushInContainer(Node& val) {
 		}
 		storageCapacity += INIT_LIST_SIZE;
 	}
+	*/
+	if (realSize == storageCapacity - 1) throw std::logic_error("Can't insert node into container: full");
 	size_t newElemIndex = firstFreeNodeIndex;
 	deleteFirstFromFreeIndexes();
 	storage[newElemIndex] = val;
@@ -542,36 +550,36 @@ inline List<T>::const_iterator::const_iterator(const List<T>::const_iterator& ot
 
 template<class T>
 inline T List<T>::const_iterator::operator*() const {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator*: Can't get the value of the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator*: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator*: Can't get the value of the end element");
 	return associatedContainer->storage[targetIndex].value;
 }
 template<class T>
 inline List<T>::const_iterator& List<T>::const_iterator::operator++() {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator++: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	targetIndex = associatedContainer->storage[targetIndex].nextNodeIndex;
 	return *this;
 }
 template<class T>
 inline List<T>::const_iterator List<T>::const_iterator::operator++(int) {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator++: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	const_iterator tempIterator = *this;
 	++(*this);
 	return tempIterator;
 }
 template<class T>
 inline List<T>::const_iterator& List<T>::const_iterator::operator--() {
-	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	targetIndex = associatedContainer->storage[targetIndex].previousNodeIndex;
 	return *this;
 }
 template<class T>
 inline List<T>::const_iterator List<T>::const_iterator::operator--(int) {
-	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	const_iterator tempIterator = *this;
 	--(*this);
 	return tempIterator;
@@ -595,36 +603,36 @@ inline List<T>::iterator::iterator(const List<T>* list, size_t targetIndex) {
 }
 template<class T>
 inline T& List<T>::iterator::operator*() const {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator*: Can't get the value of the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator*: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator*: Can't get the value of the end element");
 	return (associatedContainer->storage[targetIndex].value);
 }
 template<class T>
 inline List<T>::iterator& List<T>::iterator::operator++() {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator++: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	targetIndex = associatedContainer->storage[targetIndex].nextNodeIndex;
 	return *this;
 }
 template<class T>
 inline List<T>::iterator List<T>::iterator::operator++(int) {
-	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator++: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cend()) throw std::logic_error("operator++: Can't increment the iterator pointing at the end element");
 	iterator tempIterator = *this;
 	++(*this);
 	return tempIterator;
 }
 template<class T>
 inline List<T>::iterator& List<T>::iterator::operator--() {
-	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	targetIndex = associatedContainer->storage[targetIndex].previousNodeIndex;
 	return *this;
 }
 template<class T>
 inline List<T>::iterator List<T>::iterator::operator--(int) {
-	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	if (this->associatedContainer == nullptr) throw std::logic_error("operator--: Iterator isn't linked to any container");
+	if (*this == associatedContainer->cbegin()) throw std::logic_error("operator--: Can't decriment the iterator pointing at the begin element");
 	iterator tempIterator = *this;
 	--(*this);
 	return tempIterator;
